@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- 🔒 BLOQUEIO DE ZOOM -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Borboletas.</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', cursive;
+      background: linear-gradient(135deg, #c8a2c8, #e6ccff, #d8b4f8);
+      background-size: 400% 400%;
+      animation: gradientFlow 12s ease infinite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 40px;
+      border-radius: 25px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      color: #5e3a6d;
+      margin-bottom: 20px;
+      transition: opacity 0.6s ease;
+    }
+
+    .fade-out { opacity: 0; }
+    .fade-in { opacity: 1; }
+
+    button {
+      background: linear-gradient(145deg, #b57edc, #8c4fb0);
+      color: white;
+      border: none;
+      padding: 16px 34px;
+      font-size: 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.3);
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .counter {
+      margin-top: 15px;
+      color: #4b2c5e;
+      font-size: 16px;
+    }
+
+    .butterfly {
+      position: fixed;
+      width: 26px;
+      height: 26px;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatUp linear forwards;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(-120vh) translateX(80px); opacity: 0.9; }
+    }
+
+    .explode {
+      animation: explodeAnim 1s ease forwards;
+    }
+
+    @keyframes explodeAnim {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(2) rotate(180deg); opacity: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1 id="title" class="fade-in">Borboletas.</h1>
+  <button onclick="clickButton()">Clique aqui</button>
+  <div class="counter" id="counter">Cliques: 0</div>
+</div>
+
+<audio id="bgMusic" loop preload="auto">
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b2c3f.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="clickSound" preload="auto">
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f6b1c7f03.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  let count = 0;
+  let musicStarted = false;
+
+  const music = document.getElementById('bgMusic');
+  const clickSound = document.getElementById('clickSound');
+
+  function setTitle(text) {
+    const title = document.getElementById('title');
+    title.classList.add('fade-out');
+
+    setTimeout(() => {
+      title.innerText = text;
+      title.classList.remove('fade-out');
+      title.classList.add('fade-in');
+    }, 300);
+  }
+
+  function unlockAudio() {
+    music.muted = true;
+    music.play().then(() => {
+      music.pause();
+      music.currentTime = 0;
+      music.muted = false;
+    }).catch(()=>{});
+  }
+
+  function fadeInMusic(duration = 2000) {
+    music.volume = 0;
+    music.play().catch(()=>{});
+
+    let step = 50;
+    let increment = step / duration;
+
+    let fade = setInterval(() => {
+      if (music.volume < 0.4) {
+        music.volume = Math.min(music.volume + increment, 0.4);
+      } else {
+        clearInterval(fade);
+      }
+    }, step);
+  }
+
+  function startMusic() {
+    if (!musicStarted) {
+      fadeInMusic(2000);
+      musicStarted = true;
+    }
+  }
+
+  function playClickSound() {
+    const sound = new Audio(clickSound.src);
+    sound.volume = 0.5;
+    sound.play().catch(()=>{});
+  }
+
+  function clickButton() {
+    unlockAudio();
+    startMusic();
+    playClickSound();
+
+    count++;
+    document.getElementById('counter').innerText = 'Cliques: ' + count;
+
+    createButterfly();
+
+    if (count === 130) setTitle('Você quer se casar comigo?');
+    if (count === 140) setTitle('Se a resposta for sim, vá clicando até o 200.');
+    if (count === 200) {
+      setTitle('Então isso foi um sim? Já pode descansar os dedos e voltar a ficar comigo.');
+      explodeButterflies();
+    }
+  }
+
+  function createButterfly() {
+    const butterfly = document.createElement('div');
+    butterfly.classList.add('butterfly');
+
+    butterfly.style.left = Math.random() * 100 + 'vw';
+    butterfly.style.bottom = '-30px';
+    butterfly.style.animationDuration = (5 + Math.random() * 6) + 's';
+
+    butterfly.innerHTML = `
+      <svg viewBox="0 0 64 64">
+        <g fill="#a066c9">
+          <path d="M32 30c-6-12-18-18-24-14-6 4-2 16 10 22 4 2 8 2 14-8z"/>
+          <path d="M32 30c6-12 18-18 24-14 6 4 2 16-10 22-4 2-8 2-14-8z"/>
+        </g>
+        <rect x="30" y="28" width="4" height="16" fill="#5e3a6d"/>
+      </svg>
+    `;
+
+    document.body.appendChild(butterfly);
+    setTimeout(() => butterfly.remove(), 12000);
+  }
+
+  function explodeButterflies() {
+    document.querySelectorAll('.butterfly').forEach(b => b.classList.add('explode'));
+  }
+</script>
+
+</body>
+</html>
